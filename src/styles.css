@@ -31,7 +31,6 @@
   --color-active-bg: #e2e8f0;
   --color-active-text: #0f172a;
   --color-success: #10b981;
-  /* Emerald for avatar */
 }
 
 * {
@@ -93,33 +92,31 @@ h3,
   flex-direction: column;
   width: 260px;
   height: 100vh;
-  background-color: var(--bg-sidebar);
-  border-right: 1px solid var(--border-color);
+  background-color: #171f2c;
+  border-right: none;
   position: fixed;
   top: 0;
   left: 0;
   z-index: 50;
 }
 
-/* Branding Section */
 .sidebar-branding {
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 64px;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--border-color);
+  height: 72px;
+  padding: 0 24px;
 }
 
 .brand-icon-box {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background-color: var(--color-primary);
-  color: var(--color-primary-foreground);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background-color: #D4A373;
+  color: #171f2c;
 }
 
 .brand-text-wrapper {
@@ -128,27 +125,26 @@ h3,
 }
 
 .brand-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #ffffff;
   line-height: 1.2;
 }
 
 .brand-subtitle {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-muted);
+  color: #94a3b8;
 }
 
-/* Navigation Menu */
 .sidebar-nav {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 16px 12px;
+  padding: 24px 0;
   overflow-y: auto;
 }
 
@@ -156,86 +152,82 @@ h3,
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 10px 24px;
+  margin-right: 16px;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: #94a3b8;
   text-decoration: none;
-  border-radius: 8px;
+  border-radius: 0 8px 8px 0;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .nav-link:hover {
-  background-color: var(--color-accent);
-  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
 }
 
-/* Active Navigation State */
 .nav-link.active-route {
-  background-color: var(--color-active-bg);
-  color: var(--color-active-text);
+  background-color: #283446;
+  color: #ffffff;
   font-weight: 600;
 }
 
-/* Sidebar Middle Action Zone */
 .sidebar-action-zone {
-  padding: 0 12px 12px 12px;
+  padding: 0 0 8px 0;
 }
 
 .btn-toggle-role {
   display: flex;
-  width: 100%;
+  width: calc(100% - 16px);
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 10px 24px;
+  margin-right: 16px;
   font-size: 14px;
   font-weight: 500;
-  background-color: rgba(226, 232, 240, 0.4);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  color: var(--text-secondary);
-  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  border-radius: 0 8px 8px 0;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .btn-toggle-role:hover {
-  background-color: var(--color-accent-hover);
-  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Sidebar Footer & Logout */
 .sidebar-footer {
-  border-t: 1px solid var(--border-color);
-  padding: 12px;
+  padding: 8px 0 24px 0;
 }
 
 .btn-logout {
   display: flex;
-  width: 100%;
+  width: calc(100% - 16px);
   align-items: center;
   gap: 12px;
-  padding: 8px 12px;
-  font-size: 13px;
+  padding: 10px 24px;
+  margin-right: 16px;
+  font-size: 14px;
   font-weight: 500;
   background: transparent;
   border: none;
-  color: var(--text-muted);
-  border-radius: 8px;
+  color: #94a3b8;
+  border-radius: 0 8px 8px 0;
   cursor: pointer;
   text-align: left;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .btn-logout:hover {
-  background-color: #fef2f2;
-  color: #ef4444;
+  color: #f87171;
+  background-color: rgba(248, 113, 113, 0.1);
 }
 
-.main-content-layout-wrapper {
+.main-content-window-frame {
   margin-left: 260px;
-  /* Width of the sidebar */
-  padding-top: 64px;
-  /* Height of the header */
+  min-height: 100vh;
 }
 
 /* ==========================================================================

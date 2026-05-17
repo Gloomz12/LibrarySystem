@@ -10,10 +10,17 @@ import {
   LogOut 
 } from "lucide-react";
 
-export default function Sidebar() {
+export default function Sidebar({ role, onRoleToggle }) {
   const location = useLocation();
 
-  const isActive = (path) => location.pathname === path ? "active-route" : "";
+  const isActive = (path) => {
+    if (path === "/main/catalog") {
+      return location.pathname.startsWith("/main/catalog") || location.pathname.startsWith("/book") 
+        ? "active-route" 
+        : "";
+    }
+    return location.pathname === path ? "active-route" : "";
+  };
 
   return (
     <aside id="sidebar-panel">
@@ -22,7 +29,7 @@ export default function Sidebar() {
           <Library size={20} />
         </div>
         <div className="brand-text-wrapper">
-          <span className="brand-title">IntelliLib</span>
+          <span className="brand-title">Books Repository</span>
           <span className="brand-subtitle">Smart Library</span>
         </div>
       </div>
@@ -38,26 +45,33 @@ export default function Sidebar() {
           <span>Catalog</span>
         </Link>
         
-        <Link className={`nav-link ${isActive("/main/borrowers")}`} to="/main/borrowers">
-          <Users size={18} />
-          <span>Borrowers</span>
-        </Link>
+        {role === "admin" && (
+          <Link className={`nav-link ${isActive("/main/borrowers")}`} to="/main/borrowers">
+            <Users size={18} />
+            <span>Borrowers</span>
+          </Link>
+        )}
+        
+        {role === "student" && (
+          <Link className={`nav-link ${isActive("/main/my-books")}`} to="/main/my-books">
+            <Library size={18} />
+            <span>My Books</span>
+          </Link>
+        )}
         
         <Link className={`nav-link ${isActive("/main/transactions")}`} to="/main/transactions">
           <Repeat size={18} />
           <span>Transactions</span>
         </Link>
-
-        <Link className={`nav-link ${isActive("/main/my-books")}`} to="/main/my-books">
-          <Library size={18} />
-          <span>My Books</span>
-        </Link>
       </nav>
 
       <div className="sidebar-action-zone">
-        <button className="btn-toggle-role">
+        <button 
+          className="btn-toggle-role"
+          onClick={() => onRoleToggle(role === "admin" ? "student" : "admin")}
+        >
           <ShieldCheck size={18} />
-          <span>Switch to Student</span>
+          <span>{role === "admin" ? "Switch to Student" : "Switch to Admin"}</span>
         </button>
       </div>
 

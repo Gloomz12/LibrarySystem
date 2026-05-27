@@ -3003,3 +3003,510 @@ h3,
   color: #716F6A;
   margin: 1px 0 0 0;
 }
+
+
+/* ==========================================================================
+   NEW: LOGIN PAGE
+   ========================================================================== */
+.login-page-root {
+  min-height: 100vh;
+  background-color: #F9F7F3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.login-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.login-brand-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background-color: #1B263B;
+  color: #D4A373;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.login-brand-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1A1A1A;
+  margin: 0;
+}
+
+.login-brand-subtitle {
+  font-size: 12px;
+  color: #8A8884;
+  margin-top: 2px;
+}
+
+.login-form-section {
+  border-bottom: 1px solid #F4F1EA;
+  padding-bottom: 20px;
+}
+
+.login-form-heading {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1A1A1A;
+  margin: 0;
+}
+
+.login-form-subtext {
+  font-size: 13px;
+  color: #8A8884;
+  margin-top: 4px;
+}
+
+.login-error-banner {
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #DC2626;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.login-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4A4947;
+}
+
+.login-input-wrapper {
+  position: relative;
+}
+
+.login-input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #A09E9A;
+  pointer-events: none;
+}
+
+.login-input-field {
+  width: 100%;
+  height: 44px;
+  padding: 0 44px 0 40px;
+  border: 1px solid #EAE6DF;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1A1A1A;
+  background-color: #FAFAF9;
+  transition: border-color 0.15s ease;
+}
+
+.login-input-field:focus {
+  outline: none;
+  border-color: #1B263B;
+  background-color: #ffffff;
+}
+
+.login-pw-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #A09E9A;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.login-pw-toggle:hover {
+  color: #4A4947;
+}
+
+.login-submit-btn {
+  height: 44px;
+  background-color: #1B263B;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+  margin-top: 4px;
+}
+
+.login-submit-btn:hover:not(:disabled) {
+  background-color: #2C3E6B;
+}
+
+.login-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-demo-hint {
+  background-color: #F9F7F3;
+  border: 1px solid #EAE6DF;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.login-demo-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8A8884;
+  margin-bottom: 10px;
+}
+
+.login-demo-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.login-demo-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: #4A4947;
+}
+
+.login-demo-role {
+  font-weight: 700;
+  color: #1B263B;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ==========================================================================
+   NEW: LOADING & ERROR STATES
+   ========================================================================== */
+.app-loading-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background-color: #F9F7F3;
+  color: #8A8884;
+  font-size: 14px;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #EAE6DF;
+  border-top-color: #1B263B;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-state-block {
+  padding: 48px;
+  text-align: center;
+  color: #A09E9A;
+  font-size: 14px;
+}
+
+.error-state-block {
+  padding: 16px;
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  color: #DC2626;
+  font-size: 13px;
+}
+
+.action-feedback-banner {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.banner-success {
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  color: #15803D;
+}
+
+.banner-error {
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #DC2626;
+}
+
+/* ==========================================================================
+   NEW: HEADER INLINE STYLES
+   ========================================================================== */
+.view-app-header {
+  display: flex;
+  height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  background-color: rgba(255,255,255,0.9);
+  backdrop-filter: blur(8px);
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.header-meta-branding {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #8A8884;
+}
+
+.sparkle-icon-accent {
+  color: #D4A373;
+}
+
+.avatar-circle-initials {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #1B263B;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.avatar-circle-initials.bg-admin-accent {
+  background-color: #D4A373;
+  color: #1B263B;
+}
+
+.profile-text-labels {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-username {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A1A1A;
+  line-height: 1.2;
+}
+
+.profile-role-tag {
+  font-size: 11px;
+  color: #8A8884;
+  line-height: 1.2;
+}
+
+.capitalize-fallback {
+  text-transform: capitalize;
+}
+
+/* ==========================================================================
+   NEW: SKELETON LOADING CARDS
+   ========================================================================== */
+.skeleton-card {
+  height: 280px;
+  background: linear-gradient(90deg, #f0ede8 25%, #e8e4de 50%, #f0ede8 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 12px;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ==========================================================================
+   NEW: BADGE OVERDUE
+   ========================================================================== */
+.badge-overdue {
+  background-color: #FEF2F2 !important;
+  color: #DC2626 !important;
+}
+
+.badge-urgent {
+  background-color: #FEF3C7;
+  color: #D97706;
+}
+
+/* ==========================================================================
+   NEW: APP LAYOUT ROOT
+   ========================================================================== */
+.app-layout-root-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+
+/* ==========================================================================
+   FIXES: Missing utility classes & layout corrections
+   ========================================================================== */
+
+/* Fix: app-layout-root-container should be full height, no 40px gap */
+.app-layout-root-container {
+  display: flex;
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-content-window-frame {
+  margin-left: 260px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+/* Fix: btn-link-action-forward — "View All" link in dashboard panels */
+.btn-link-action-forward {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8A8884;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-link-action-forward:hover {
+  color: #1A1A1A;
+  background-color: #F5F3ED;
+}
+
+/* Fix: panel-header-subtitle-desc — subtitle under panel heading */
+.panel-header-subtitle-desc {
+  font-size: 12px;
+  color: #A09E9A;
+  margin-top: 2px;
+}
+
+/* Fix: panel-header-title-flex — icon + title row in panel headers */
+.panel-header-title-flex {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-header-title-flex h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.panel-icon-brand {
+  color: #D4A373;
+}
+
+/* Fix: flex-1 utility — equal-width flex children */
+.flex-1 {
+  flex: 1 1 0%;
+}
+
+/* Fix: truncate utility — single-line text overflow */
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   REGISTER PAGE additions
+   ========================================================================== */
+
+/* Input error state */
+.input-error {
+  border-color: #FCA5A5 !important;
+  background-color: #FFF5F5 !important;
+}
+
+.input-error:focus {
+  border-color: #EF4444 !important;
+}
+
+/* Field-level error text */
+.field-error-text {
+  font-size: 11px;
+  color: #DC2626;
+  margin-top: 2px;
+  display: block;
+}
+
+/* Optional field tag */
+.field-optional-tag {
+  font-size: 11px;
+  font-weight: 400;
+  color: #A09E9A;
+}
+
+/* Sign-in / register cross-link */
+.register-signin-link {
+  text-align: center;
+  font-size: 13px;
+  color: #8A8884;
+}
+
+.register-link-accent {
+  color: #1B263B;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.register-link-accent:hover {
+  text-decoration: underline;
+}

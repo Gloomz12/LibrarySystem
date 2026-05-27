@@ -1,25 +1,32 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom"; 
-import { 
-  Library, 
-  LayoutDashboard, 
-  Search, 
-  Users, 
-  Repeat, 
-  ShieldCheck,
-  LogOut 
-} from "lucide-react";
+import React from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Library,
+  LayoutDashboard,
+  Search,
+  Users,
+  Repeat,
+  LogOut,
+} from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
-export default function Sidebar({ role, onRoleToggle }) {
+export default function Sidebar({ role }) {
   const location = useLocation();
+  const navigate  = useNavigate();
+  const { logout } = useAuth();
 
   const isActive = (path) => {
-    if (path === "/main/catalog") {
-      return location.pathname.startsWith("/main/catalog") || location.pathname.startsWith("/book") 
-        ? "active-route" 
-        : "";
+    if (path === '/main/catalog') {
+      return location.pathname.startsWith('/main/catalog') || location.pathname.startsWith('/book')
+        ? 'active-route'
+        : '';
     }
-    return location.pathname === path ? "active-route" : "";
+    return location.pathname === path ? 'active-route' : '';
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -35,48 +42,38 @@ export default function Sidebar({ role, onRoleToggle }) {
       </div>
 
       <nav className="sidebar-nav">
-        <Link className={`nav-link ${isActive("/main/dashboard")}`} to="/main/dashboard">
+        <Link className={`nav-link ${isActive('/main/dashboard')}`} to="/main/dashboard">
           <LayoutDashboard size={18} />
           <span>Dashboard</span>
         </Link>
-        
-        <Link className={`nav-link ${isActive("/main/catalog")}`} to="/main/catalog">
+
+        <Link className={`nav-link ${isActive('/main/catalog')}`} to="/main/catalog">
           <Search size={18} />
           <span>Catalog</span>
         </Link>
-        
-        {role === "admin" && (
-          <Link className={`nav-link ${isActive("/main/borrowers")}`} to="/main/borrowers">
+
+        {role === 'admin' && (
+          <Link className={`nav-link ${isActive('/main/borrowers')}`} to="/main/borrowers">
             <Users size={18} />
             <span>Borrowers</span>
           </Link>
         )}
-        
-        {role === "student" && (
-          <Link className={`nav-link ${isActive("/main/my-books")}`} to="/main/my-books">
+
+        {role === 'student' && (
+          <Link className={`nav-link ${isActive('/main/my-books')}`} to="/main/my-books">
             <Library size={18} />
             <span>My Books</span>
           </Link>
         )}
-        
-        <Link className={`nav-link ${isActive("/main/transactions")}`} to="/main/transactions">
+
+        <Link className={`nav-link ${isActive('/main/transactions')}`} to="/main/transactions">
           <Repeat size={18} />
           <span>Transactions</span>
         </Link>
       </nav>
 
-      <div className="sidebar-action-zone">
-        <button 
-          className="btn-toggle-role"
-          onClick={() => onRoleToggle(role === "admin" ? "student" : "admin")}
-        >
-          <ShieldCheck size={18} />
-          <span>{role === "admin" ? "Switch to Student" : "Switch to Admin"}</span>
-        </button>
-      </div>
-
       <div className="sidebar-footer">
-        <button className="btn-logout">
+        <button className="btn-logout" onClick={handleLogout}>
           <LogOut size={14} />
           <span>Log Out</span>
         </button>

@@ -1,182 +1,198 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { mockTransactions } from "../data/mockTransactions";
-import { 
-  ArrowRightLeft, 
-  BookOpen, 
-  RotateCcw, 
-  DollarSign, 
-  Search, 
-  ChevronDown, 
-  ArrowUpDown,
-  ClipboardList,
-  User,
-  Calendar,
-  CircleCheckBig,
-  CircleX
-} from "lucide-react";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  ArrowRightLeft, BookOpen, RotateCcw,
+  Search, ClipboardList,
+  User, Calendar, CircleCheckBig, CircleX,
+} from 'lucide-react';
+import { api } from '../api/client';
 
 export default function AdminTransactions() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [transactions, setTransactions] = useState([]);
+  const [pending,      setPending]      = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState('');
+  const [actionMsg,    setActionMsg]    = useState('');
 
-  const filteredTransactions = mockTransactions.filter((tx) =>
-    tx.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    tx.borrowerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    tx.borrowerId.toLowerCase().includes(searchQuery.toLowerCase())
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dueDates,    setDueDates]    = useState({}); // txId → date string
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [txResult, pendingResult] = await Promise.all([
+        api.getTransactions({ limit: 100 }),
+        api.getPendingRequests(),
+      ]);
+      // Show only completed/approved transactions in history
+      const history = txResult.transactions.filter(t =>
+        (t.type === 'borrow' && t.status === 'approved') ||
+        (t.type === 'return' && t.status === 'completed')
+      );
+      setTransactions(history);
+      setPending(pendingResult);
+    } catch (err) {
+      setError('Failed to load transactions.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleApprove = async (txId) => {
+    setActionMsg('');
+    try {
+      const dueDate = dueDates[txId] || undefined;
+      await api.approveRequest(txId, dueDate);
+      setActionMsg('Request approved successfully.');
+      await loadData();
+    } catch (err) {
+      setActionMsg(err.message || 'Failed to approve request.');
+    }
+  };
+
+  const handleDecline = async (txId) => {
+    setActionMsg('');
+    try {
+      await api.declineRequest(txId);
+      setActionMsg('Request declined.');
+      await loadData();
+    } catch (err) {
+      setActionMsg(err.message || 'Failed to decline request.');
+    }
+  };
+
+  const filtered = transactions.filter(tx =>
+    !searchQuery ||
+    tx.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    tx.borrower_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    tx.borrower_student_id?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const totalTransactionsCount = filteredTransactions.length;
-  const borrowsCount = filteredTransactions.filter(tx => tx.type.toLowerCase() === "borrowed").length;
-  const returnsCount = filteredTransactions.filter(tx => tx.type.toLowerCase() === "returned").length;
-  const totalValueSum = filteredTransactions.reduce((acc, curr) => acc + (curr.value || 0), 0);
+  const totalCount   = filtered.length;
+  const borrowsCount = filtered.filter(t => t.type === 'borrow').length;
+  const returnsCount = filtered.filter(t => t.type === 'return').length;
 
   return (
     <main id="scroll-container">
       <div className="max-width-limiter">
-        
-        {/* Module Title Section */}
+
         <div className="view-heading-group">
           <h1>Transactions</h1>
-          <p>Your borrow and return history</p>
+          <p>Manage borrow and return requests</p>
         </div>
 
-        {/* Analytics Top Ribbon Blocks */}
+        {/* Stats */}
         <div className="analytics-grid">
           <div className="tx-metric-card-box">
-            <div className="tx-icon-container tx-icon-blue">
-              <ArrowRightLeft size={18} />
-            </div>
-            <div>
-              <p className="tx-metric-value">{totalTransactionsCount}</p>
-              <p className="tx-metric-label">Total transactions</p>
-            </div>
+            <div className="tx-icon-container tx-icon-blue"><ArrowRightLeft size={18} /></div>
+            <div><p className="tx-metric-value">{totalCount}</p><p className="tx-metric-label">Total transactions</p></div>
           </div>
-
           <div className="tx-metric-card-box">
-            <div className="tx-icon-container tx-icon-green">
-              <BookOpen size={18} />
-            </div>
-            <div>
-              <p className="tx-metric-value">{borrowsCount}</p>
-              <p className="tx-metric-label">Borrows</p>
-            </div>
+            <div className="tx-icon-container tx-icon-green"><BookOpen size={18} /></div>
+            <div><p className="tx-metric-value">{borrowsCount}</p><p className="tx-metric-label">Borrows</p></div>
           </div>
-
           <div className="tx-metric-card-box">
-            <div className="tx-icon-container tx-icon-orange">
-              <RotateCcw size={18} />
-            </div>
-            <div>
-              <p className="tx-metric-value">{returnsCount}</p>
-              <p className="tx-metric-label">Returns</p>
-            </div>
+            <div className="tx-icon-container tx-icon-orange"><RotateCcw size={18} /></div>
+            <div><p className="tx-metric-value">{returnsCount}</p><p className="tx-metric-label">Returns</p></div>
           </div>
-
           <div className="tx-metric-card-box">
-            <div className="tx-icon-container tx-icon-sky">
-              <DollarSign size={18} />
+            <div className="tx-icon-container tx-icon-sky"><ClipboardList size={18} /></div>
+            <div><p className="tx-metric-value">{pending.length}</p><p className="tx-metric-label">Pending requests</p></div>
+          </div>
+        </div>
+
+        {actionMsg && (
+          <div className={`action-feedback-banner ${actionMsg.includes('Failed') || actionMsg.includes('failed') ? 'banner-error' : 'banner-success'}`} style={{ marginTop: '16px' }}>
+            {actionMsg}
+          </div>
+        )}
+
+        {/* Pending Requests */}
+        {pending.length > 0 && (
+          <div className="pending-requests-card" style={{ marginTop: '24px' }}>
+            <div className="pending-requests-header">
+              <ClipboardList size={18} />
+              <h3>Pending Requests ({pending.length})</h3>
             </div>
-            <div>
-              <p className="tx-metric-value">${totalValueSum.toFixed(2)}</p>
-              <p className="tx-metric-label">Total value</p>
+
+            <div className="pending-requests-body">
+              {pending.map((req) => {
+                const defaultDue = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                  .toISOString().split('T')[0];
+
+                return (
+                  <div key={req.transaction_id} className="pending-request-row">
+                    <div className="tx-info-block">
+                      <Link to={`/main/catalog/${req.book_id}`}>
+                        <div className="cover-micro-thumb" style={{ backgroundColor: req.bg_banner }}>
+                          {req.code}
+                        </div>
+                      </Link>
+                      <div className="text-truncator">
+                        <Link to={`/main/catalog/${req.book_id}`} className="tx-title-link">
+                          {req.title}
+                        </Link>
+                        <div className="details-author-row">
+                          <User size={12} />
+                          <span>{req.borrower_name}</span>
+                          <span className="meta-split-pipe">|</span>
+                          <span>{req.borrower_student_id}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pending-action-controls-wrapper">
+                      <span className={`badge-request-type ${req.type === 'borrow_request' ? 'badge-request-borrow' : 'badge-request-return'}`}>
+                        {req.type === 'borrow_request' ? 'Borrow Request' : 'Return Request'}
+                      </span>
+
+                      <div className="pending-action-controls-wrapper" style={{ flexDirection: 'row', gap: '8px' }}>
+                        {req.type === 'borrow_request' && (
+                          <div className="details-author-row" style={{ marginTop: 0 }}>
+                            <Calendar size={14} style={{ color: '#8A8884' }} />
+                            <input
+                              type="date"
+                              className="pending-date-input-field"
+                              defaultValue={defaultDue}
+                              onChange={e => setDueDates(prev => ({ ...prev, [req.transaction_id]: e.target.value }))}
+                            />
+                          </div>
+                        )}
+
+                        <div className="btn-pending-action-group">
+                          <button
+                            type="button"
+                            className="btn-admin-accept"
+                            onClick={() => handleApprove(req.transaction_id)}
+                          >
+                            <CircleCheckBig size={14} />
+                            <span>{req.type === 'return_request' ? 'Confirm Return' : 'Accept'}</span>
+                          </button>
+                          {req.type === 'borrow_request' && (
+                            <button
+                              type="button"
+                              className="btn-admin-decline"
+                              onClick={() => handleDecline(req.transaction_id)}
+                            >
+                              <CircleX size={14} />
+                              <span>Decline</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </div>
+        )}
 
-{/* Pending Requests Container Panel Module */}
-<div className="pending-requests-card" style={{ marginTop: '24px' }}>
-  <div className="pending-requests-header">
-    <ClipboardList size={18} />
-    <h3>Pending Requests (2)</h3>
-  </div>
-  
-  <div className="pending-requests-body">
-    
-    {/* Request Element 1: Borrow Allocation */}
-    <div className="pending-request-row">
-      <div className="tx-info-block">
-        <Link to="/main/catalog/b16">
-          <div className="cover-micro-thumb" style={{ backgroundColor: "#065F46" }}>
-            CR
-          </div>
-        </Link>
-        <div className="text-truncator">
-          <Link to="/main/catalog/b16" className="tx-title-link">
-            Crime and Punishment
-          </Link>
-          <div className="details-author-row">
-            <User size={12} />
-            <span>Alice Chen</span>
-            <span className="meta-split-pipe">|</span>
-            <span>ST2024001</span>
-            <span className="meta-split-pipe">|</span>
-            <DollarSign size={12} />
-            <span>14.99</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="pending-action-controls-wrapper">
-        <span className="badge-request-type badge-request-borrow">
-          Borrow Request
-        </span>
-        <div className="pending-action-controls-wrapper" style={{ flexDirection: 'row', gap: '8px' }}>
-          <div className="details-author-row" style={{ marginTop: 0 }}>
-            <Calendar size={14} style={{ color: '#8A8884' }} />
-            <input type="date" className="pending-date-input-field" defaultValue="2026-06-17" />
-          </div>
-          <div className="btn-pending-action-group">
-            <button type="button" className="btn-admin-accept">
-              <CircleCheckBig size={14} />
-              <span>Accept</span>
-            </button>
-            <button type="button" className="btn-admin-decline">
-              <CircleX size={14} />
-              <span>Decline</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Request Element 2: Return Check-in Verification */}
-    <div className="pending-request-row">
-      <div className="tx-info-block">
-        <Link to="/main/catalog/b9">
-          <div className="cover-micro-thumb" style={{ backgroundColor: "#44403C" }}>
-            LO
-          </div>
-        </Link>
-        <div className="text-truncator">
-          <Link to="/main/catalog/b9" className="tx-title-link">
-            Love in the Time of Cholera
-          </Link>
-          <div className="details-author-row">
-            <User size={12} />
-            <span>Alice Chen</span>
-            <span className="meta-split-pipe">|</span>
-            <span>ST2024001</span>
-            <span className="meta-split-pipe">|</span>
-            <DollarSign size={12} />
-            <span>15.99</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="pending-action-controls-wrapper">
-        <span className="badge-request-type badge-request-return">
-          Return Request
-        </span>
-        <button type="button" className="btn-admin-accept">
-          <CircleCheckBig size={14} />
-          <span>Confirm Return</span>
-        </button>
-      </div>
-    </div>
-
-  </div>
-</div>
-
+        {/* Search */}
         <div className="catalog-filter-bar">
           <div className="filter-flex-wrapper">
             <div className="search-input-wrapper">
@@ -184,89 +200,62 @@ export default function AdminTransactions() {
               <input
                 type="text"
                 className="catalog-search-field"
-                placeholder="Search by book, borrower, or ID..."
+                placeholder="Search by book, borrower, or ID…"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
               />
-            </div>
-
-            <div className="filter-selectors-group">
-              <button type="button" className="dropdown-combobox-trigger" style={{ width: "125px" }}>
-                <div className="combobox-text-side">
-                  <ArrowRightLeft size={14} />
-                  <span>All Types</span>
-                </div>
-                <ChevronDown size={14} style={{ opacity: 0.6 }} />
-              </button>
-
-              <button type="button" className="dropdown-combobox-trigger" style={{ width: "145px" }}>
-                <div className="combobox-text-side">
-                  <ArrowUpDown size={14} />
-                  <span>Date (Newest)</span>
-                </div>
-                <ChevronDown size={14} style={{ opacity: 0.6 }} />
-              </button>
             </div>
           </div>
         </div>
 
+        {error && <div className="error-state-block" style={{ marginBottom: '16px' }}>{error}</div>}
+
+        {/* Transaction History */}
         <div className="content-panel-block">
           <div className="panel-header-block">
-            <h3>Your Transaction History</h3>
+            <h3>Transaction History</h3>
           </div>
-          
           <div className="panel-body-content">
             <div className="tx-ledger-list">
-              {filteredTransactions.length > 0 ? (
-                filteredTransactions.map((tx) => (
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#A09E9A', fontSize: '14px' }}>Loading…</div>
+              ) : filtered.length > 0 ? (
+                filtered.map((tx) => (
                   <div key={tx.id} className="tx-row-item">
-                    
                     <div className="tx-info-block">
-                      <Link to={`/main/catalog/${tx.bookId}`}>
-                        <div className="cover-micro-thumb" style={{ backgroundColor: tx.color }}>
+                      <Link to={`/main/catalog/${tx.book_id}`}>
+                        <div className="cover-micro-thumb" style={{ backgroundColor: tx.bg_banner }}>
                           {tx.code}
                         </div>
                       </Link>
                       <div className="text-truncator">
-                        <Link to={`/main/catalog/${tx.bookId}`} className="tx-title-link">
+                        <Link to={`/main/catalog/${tx.book_id}`} className="tx-title-link">
                           {tx.title}
                         </Link>
                         <div className="details-author-row">
-                          <span>{tx.borrowerName}</span>
+                          <span>{tx.borrower_name}</span>
                           <span className="meta-split-pipe">|</span>
-                          <span>{tx.borrowerId}</span>
+                          <span>{tx.borrower_student_id}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="tx-meta-row-data">
-                      <div className="tx-data-capsule" style={{ color: "#716F6A" }}>
-                        <span>$ {tx.value.toFixed(2)}</span>
+                      <div className="tx-data-capsule" style={{ color: '#716F6A' }}>
+                        <span>{new Date(tx.created_at).toLocaleDateString()}</span>
                       </div>
-                      <div className="tx-data-capsule" style={{ color: "#A09E9A" }}>
-                        <span>{tx.date}</span>
-                      </div>
-                      
-                      <span className={`status-tag-badge ${
-                        tx.type.toLowerCase() === "borrowed" 
-                          ? "status-badge-borrowed" 
-                          : "status-badge-returned"
-                      }`}>
-                        {tx.type}
+                      <span className={`status-tag-badge ${tx.type === 'borrow' ? 'status-badge-borrowed' : 'status-badge-returned'}`}>
+                        {tx.type === 'borrow' ? 'Borrowed' : 'Returned'}
                       </span>
-                      
-                      {tx.dueDate && (
-                        <span className="row-assignment-string">
-                          Due: {tx.dueDate}
-                        </span>
+                      {tx.due_date && (
+                        <span className="row-assignment-string">Due: {tx.due_date}</span>
                       )}
                     </div>
-
                   </div>
                 ))
               ) : (
-                <div style={{ textAlign: "center", padding: "40px 0", color: "#A09E9A", fontSize: "14px" }}>
-                  No historical library transaction records match your search criteria.
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#A09E9A', fontSize: '14px' }}>
+                  No transaction records match your search.
                 </div>
               )}
             </div>

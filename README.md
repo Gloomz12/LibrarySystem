@@ -1,70 +1,208 @@
-# Getting Started with Create React App
+# Library System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack intelligent library management system with AI-powered book recommendations, RBAC (admin/student roles), and a MySQL backend.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Tech Stack
 
-### `npm start`
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, React Router v7, Lucide React |
+| Backend | Node.js, Express 4 |
+| Database | MySQL 8+ |
+| Auth | JWT (access + refresh tokens), bcrypt |
+| AI | Content-based filtering (cosine similarity, no external API) |
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Features
 
-### `npm test`
+- **Authentication** — JWT access tokens (15 min) + refresh tokens (7 days), stored in sessionStorage. Passwords hashed with bcrypt (12 rounds).
+- **RBAC** — Two roles: `admin` and `student`. Route-level and API-level enforcement.
+- **Book Catalog** — Search by title/author/ISBN, filter by genre/status, sort by title/author/rating/year.
+- **Borrow Workflow** — Student requests → Admin approves/declines with due date → Student requests return → Admin confirms.
+- **AI Recommendations** — Content-based filtering using TF-IDF-weighted cosine similarity on genres + tags. Cold-start fallback to top-rated books.
+- **Overdue Predictions** — Risk scoring based on user return rate history + days until due date.
+- **Admin Dashboard** — Live KPIs, overdue risk predictions, genre distribution, smart recommendations.
+- **Student Dashboard** — Active loans, pending requests, due-soon alerts, personalized recommendations.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## Project Structure
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+LibrarySystem/
+├── src/                    # React frontend
+│   ├── api/client.js       # Centralized API client with auto token refresh
+│   ├── context/AuthContext.jsx
+│   ├── pages/
+│   │   ├── Login.jsx
+│   │   ├── AdminDashboard.jsx
+│   │   ├── StudentDashboard.jsx
+│   │   ├── Catalog.jsx
+│   │   ├── BookDetails.jsx
+│   │   ├── MyBooks.jsx
+│   │   ├── Borrowers.jsx
+│   │   ├── AdminTransactions.jsx
+│   │   └── StudentTransactions.jsx
+│   └── components/Sidebar.jsx
+│
+└── backend/
+    ├── server.js
+    ├── db/
+    │   ├── connection.js
+    │   ├── schema.sql       # All tables + views
+    │   ├── seed.sql         # 21 books, 6 users, sample transactions
+    │   └── setup.js         # One-command DB setup script
+    ├── middleware/
+    │   ├── auth.js          # JWT verify + RBAC authorize()
+    │   └── validate.js      # express-validator error handler
+    ├── routes/
+    │   ├── auth.js          # login, refresh, logout, /me
+    │   ├── books.js         # CRUD + genre/tag management
+    │   ├── transactions.js  # Borrow/return request lifecycle
+    │   ├── users.js         # User management + loan/history endpoints
+    │   ├── recommendations.js
+    │   └── dashboard.js
+    └── services/
+        └── recommendations.js  # AI engine (cosine similarity + overdue scoring)
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Setup
 
-### `npm run eject`
+### Prerequisites
+- Node.js 18+
+- MySQL 8+
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 1. Configure the backend
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+cd backend
+cp .env.example .env
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Edit `backend/.env` and set your MySQL credentials:
+```
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=library_system
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+JWT_ACCESS_SECRET=change_this_to_a_long_random_string
+JWT_REFRESH_SECRET=change_this_to_another_long_random_string
+```
 
-## Learn More
+### 2. Set up the database
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+cd backend
+npm run setup-db
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+This creates the `library_system` database, all tables, and seeds 21 books + 6 users.
 
-### Code Splitting
+### 3. Start the backend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+cd backend
+npm run dev       # development (nodemon)
+# or
+npm start         # production
+```
 
-### Analyzing the Bundle Size
+Backend runs on `http://localhost:5000`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### 4. Start the frontend
 
-### Making a Progressive Web App
+```bash
+# from project root
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Frontend runs on `http://localhost:3000`.
 
-### Advanced Configuration
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Demo Credentials
 
-### Deployment
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin@library.edu | Admin@123 |
+| Student | alice.chen@university.edu | Student@123 |
+| Student | marcus.j@university.edu | Student@123 |
+| Student | jpark99@university.edu | Student@123 |
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## API Reference
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+All endpoints require `Authorization: Bearer <accessToken>` except `/api/auth/login`.
+
+### Auth
+| Method | Path | Access |
+|---|---|---|
+| POST | `/api/auth/login` | Public |
+| POST | `/api/auth/refresh` | Public |
+| POST | `/api/auth/logout` | Authenticated |
+| GET  | `/api/auth/me` | Authenticated |
+
+### Books
+| Method | Path | Access |
+|---|---|---|
+| GET    | `/api/books` | All |
+| GET    | `/api/books/genres` | All |
+| GET    | `/api/books/:id` | All |
+| POST   | `/api/books` | Admin |
+| PUT    | `/api/books/:id` | Admin |
+| DELETE | `/api/books/:id` | Admin |
+
+### Transactions
+| Method | Path | Access |
+|---|---|---|
+| GET  | `/api/transactions` | All (students see own only) |
+| GET  | `/api/transactions/pending` | Admin |
+| POST | `/api/transactions/borrow-request` | Student |
+| POST | `/api/transactions/return-request` | Student |
+| POST | `/api/transactions/:id/cancel` | Student |
+| POST | `/api/transactions/:id/approve` | Admin |
+| POST | `/api/transactions/:id/decline` | Admin |
+
+### Users
+| Method | Path | Access |
+|---|---|---|
+| GET  | `/api/users` | Admin |
+| GET  | `/api/users/:id` | Admin / Own |
+| GET  | `/api/users/:id/active-loans` | Admin / Own |
+| GET  | `/api/users/:id/reading-history` | Admin / Own |
+| POST | `/api/users` | Admin |
+| PUT  | `/api/users/:id` | Admin / Own |
+
+### Recommendations & AI
+| Method | Path | Access |
+|---|---|---|
+| GET | `/api/recommendations` | Authenticated |
+| GET | `/api/recommendations/user/:userId` | Admin |
+| GET | `/api/recommendations/similar/:bookId` | Authenticated |
+| GET | `/api/recommendations/overdue-predictions` | Admin |
+
+### Dashboard
+| Method | Path | Access |
+|---|---|---|
+| GET | `/api/dashboard/admin` | Admin |
+| GET | `/api/dashboard/student` | Student |
+
+---
+
+## Security Notes
+
+- Passwords are hashed with **bcrypt** (12 rounds)
+- JWT secrets should be long random strings in production — use `openssl rand -hex 32`
+- Refresh tokens are stored **hashed** in the database and rotated on every use
+- Rate limiting: 200 req/15min globally, 20 req/15min on auth endpoints
+- `helmet` sets secure HTTP headers
+- Input validation on all write endpoints via `express-validator`
+- SQL injection prevented via parameterized queries throughout

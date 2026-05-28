@@ -6,6 +6,12 @@
 .pnp.js
 /backend/node_modules
 
+# Python virtual environments
+.venv
+venv
+env
+.env.venv
+
 # testing
 /coverage
 

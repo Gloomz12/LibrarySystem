@@ -1,7 +1,7 @@
 # AI Model Evaluation Report
 
 **System:** Books Repository — Intelligent Library Management  
-**Generated:** Thursday, May 28, 2026 · 8:41:09 AM  
+**Generated:** Thursday, May 28, 2026 · 9:23:00 AM  
 **Database:** Live evaluation against real transaction data  
 
 ---
@@ -10,11 +10,13 @@
 
 1. [Executive Summary](#1-executive-summary)
 2. [Overdue Return Predictor](#2-overdue-return-predictor)
+   - [Data Split](#data-split-5-fold-cross-validation)
    - [Performance Metrics](#21-performance-metrics)
    - [Confusion Matrix](#22-confusion-matrix)
    - [Feature Importance](#23-feature-importance)
    - [Live Risk Predictions](#24-live-risk-predictions)
 3. [Book Recommendation Engine](#3-book-recommendation-engine)
+   - [Data Split](#data-split-leave-one-out-cross-validation)
    - [Performance Metrics](#31-performance-metrics)
    - [Sample Recommendations](#32-sample-recommendations)
 4. [System Architecture](#4-system-architecture)
@@ -57,6 +59,26 @@ The library system integrates two AI models that learn from real borrowing data:
 | On-time returns | 27 | 54.0% |
 | Overdue returns | 23 | 46.0% |
 | **Total** | **50** | **100%** |
+
+### Data Split (5-Fold Cross-Validation)
+
+| | Count | Percentage |
+|---|---|---|
+| Total dataset | **50** loans | 100% |
+| Training set per fold (avg) | **40** loans | 80.0% |
+| Validation set per fold (avg) | **10** loans | 20.0% |
+| Last fold validation set | **10** loans | 20.0% |
+
+> Each fold trains on 40 samples and tests on 10–10 unseen samples. This is repeated 5 times so every sample is used for testing exactly once.
+
+```
+Fold breakdown:
+  Fold 1: Train = 40 samples | Validate = 10 samples (rows 1–10)
+  Fold 2: Train = 40 samples | Validate = 10 samples (rows 11–20)
+  Fold 3: Train = 40 samples | Validate = 10 samples (rows 21–30)
+  Fold 4: Train = 40 samples | Validate = 10 samples (rows 31–40)
+  Fold 5: Train = 40 samples | Validate = 10 samples (rows 41–50)
+```
 
 ### 2.1 Performance Metrics
 
@@ -112,8 +134,8 @@ Current risk assessment for all active loans as of report generation:
 | 🟢 low risk | Maria Santos | ST2025001 |  | 19d remaining | 3% | 100% |
 | 🟢 low risk | Ana Cruz | ST2025003 | Sun Jun 21 2026 08:00:00 GM | 24d remaining | 2% | 80% |
 | 🟢 low risk | Lord Byron Dizon | 201610090 | Fri Jun 26 2026 08:00:00 GM | 29d remaining | 1% | 100% |
-| 🟢 low risk | Liza Mendoza | ST2025005 | Fri Jun 26 2026 08:00:00 GM | 29d remaining | 1% | 100% |
 | 🟢 low risk | Lord Byron Dizon | 201610090 | Fri Jun 26 2026 08:00:00 GM | 29d remaining | 1% | 100% |
+| 🟢 low risk | Liza Mendoza | ST2025005 | Fri Jun 26 2026 08:00:00 GM | 29d remaining | 1% | 100% |
 | 🟢 low risk | Lord Byron Dizon | 201610090 | Fri Jun 26 2026 08:00:00 GM | 29d remaining | 1% | 100% |
 | 🟢 low risk | Lord Byron Dizon | 201610090 | Fri Jun 26 2026 08:00:00 GM | 29d remaining | 1% | 100% |
 | 🟢 low risk | Lord Byron Dizon | 201610090 | Fri Jun 26 2026 08:00:00 GM | 29d remaining | 1% | 100% |
@@ -133,6 +155,27 @@ Current risk assessment for all active loans as of report generation:
 **Evaluation method:** Leave-One-Out Cross-Validation (K=5)  
 **Users evaluated:** 11 (users with ≥2 books in reading history)  
 **Catalog coverage:** 18 of 21 books recommended (85.7%)  
+
+### Data Split (Leave-One-Out Cross-Validation)
+
+| | Count |
+|---|---|
+| Total users with reading history | **11** |
+| Users eligible for evaluation (≥2 books) | **11** |
+| Cold-start users (< 2 books, excluded from eval) | **0** |
+| Total books in catalog | **21** |
+| Books appearing in recommendations | **18** |
+
+> **Leave-one-out method:** For each eligible user, the most recently read book is hidden. The engine recommends top-5 books using the remaining history. A "hit" is recorded if the hidden book appears in the top-5. This simulates real-world prediction of the next book a user will want.
+
+```
+Per evaluation run:
+  Training (user profile built from): N-1 books per user
+  Test (held-out book):               1 book per user
+  Candidate pool (books to rank):     All available books minus training set
+  Evaluation runs total:              11
+  Successful hits (book in top-5):  10
+```
 
 ### 3.1 Performance Metrics
 

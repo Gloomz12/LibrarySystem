@@ -66,11 +66,13 @@ async function generate() {
   md += `## Table of Contents\n\n`;
   md += `1. [Executive Summary](#1-executive-summary)\n`;
   md += `2. [Overdue Return Predictor](#2-overdue-return-predictor)\n`;
+  md += `   - [Data Split](#data-split-5-fold-cross-validation)\n`;
   md += `   - [Performance Metrics](#21-performance-metrics)\n`;
   md += `   - [Confusion Matrix](#22-confusion-matrix)\n`;
   md += `   - [Feature Importance](#23-feature-importance)\n`;
   md += `   - [Live Risk Predictions](#24-live-risk-predictions)\n`;
   md += `3. [Book Recommendation Engine](#3-book-recommendation-engine)\n`;
+  md += `   - [Data Split](#data-split-leave-one-out-cross-validation)\n`;
   md += `   - [Performance Metrics](#31-performance-metrics)\n`;
   md += `   - [Sample Recommendations](#32-sample-recommendations)\n`;
   md += `4. [System Architecture](#4-system-architecture)\n`;
@@ -118,7 +120,31 @@ async function generate() {
     md += `> ℹ️ **Note:** ${od.note}\n\n`;
   }
 
-  // 2.1 Performance Metrics
+  // Data split breakdown
+  if (od?.sampleSize && od?.folds) {
+    const foldSize   = Math.floor(od.sampleSize / od.folds);
+    const lastFold   = od.sampleSize - foldSize * (od.folds - 1);
+    const trainAvg   = od.sampleSize - foldSize;
+    md += `### Data Split (${od.folds}-Fold Cross-Validation)\n\n`;
+    md += `| | Count | Percentage |\n`;
+    md += `|---|---|---|\n`;
+    md += `| Total dataset | **${od.sampleSize}** loans | 100% |\n`;
+    md += `| Training set per fold (avg) | **${trainAvg}** loans | ${pct(trainAvg / od.sampleSize)} |\n`;
+    md += `| Validation set per fold (avg) | **${foldSize}** loans | ${pct(foldSize / od.sampleSize)} |\n`;
+    md += `| Last fold validation set | **${lastFold}** loans | ${pct(lastFold / od.sampleSize)} |\n\n`;
+    md += `> Each fold trains on ${trainAvg} samples and tests on ${foldSize}–${lastFold} unseen samples. `;
+    md += `This is repeated ${od.folds} times so every sample is used for testing exactly once.\n\n`;
+    md += `\`\`\`\n`;
+    md += `Fold breakdown:\n`;
+    for (let f = 1; f <= od.folds; f++) {
+      const valStart = (f - 1) * foldSize + 1;
+      const valEnd   = f === od.folds ? od.sampleSize : f * foldSize;
+      const valCount = valEnd - valStart + 1;
+      const trainCount = od.sampleSize - valCount;
+      md += `  Fold ${f}: Train = ${trainCount} samples | Validate = ${valCount} samples (rows ${valStart}–${valEnd})\n`;
+    }
+    md += `\`\`\`\n\n`;
+  }  // 2.1 Performance Metrics
   md += `### 2.1 Performance Metrics\n\n`;
   if (od?.metrics) {
     md += `| Metric | Score | Bar | Interpretation |\n`;
@@ -204,7 +230,30 @@ async function generate() {
     md += `> ℹ️ **Note:** ${rec.note}\n\n`;
   }
 
-  // 3.1 Performance Metrics
+  // Data split breakdown for recommendation engine
+  if (rec?.totalUsers !== undefined && rec?.totalEvaluations !== undefined) {
+    const coldStart = rec.totalUsers - rec.totalEvaluations;
+    md += `### Data Split (Leave-One-Out Cross-Validation)\n\n`;
+    md += `| | Count |\n`;
+    md += `|---|---|\n`;
+    md += `| Total users with reading history | **${rec.totalUsers}** |\n`;
+    md += `| Users eligible for evaluation (≥2 books) | **${rec.totalEvaluations}** |\n`;
+    md += `| Cold-start users (< 2 books, excluded from eval) | **${coldStart}** |\n`;
+    md += `| Total books in catalog | **${rec.totalBooks}** |\n`;
+    md += `| Books appearing in recommendations | **${rec.uniqueBooksRecommended}** |\n\n`;
+    md += `> **Leave-one-out method:** For each eligible user, the most recently read book is hidden. `;
+    md += `The engine recommends top-${rec.k} books using the remaining history. `;
+    md += `A "hit" is recorded if the hidden book appears in the top-${rec.k}. `;
+    md += `This simulates real-world prediction of the next book a user will want.\n\n`;
+    md += `\`\`\`\n`;
+    md += `Per evaluation run:\n`;
+    md += `  Training (user profile built from): N-1 books per user\n`;
+    md += `  Test (held-out book):               1 book per user\n`;
+    md += `  Candidate pool (books to rank):     All available books minus training set\n`;
+    md += `  Evaluation runs total:              ${rec.totalEvaluations}\n`;
+    md += `  Successful hits (book in top-${rec.k}):  ${rec.hitsAtK}\n`;
+    md += `\`\`\`\n\n`;
+  }
   md += `### 3.1 Performance Metrics\n\n`;
   if (rec) {
     md += `| Metric | Score | Bar | Interpretation |\n`;

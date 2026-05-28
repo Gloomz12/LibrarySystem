@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Calendar, ArrowRight, BookOpen, RotateCcw, X } from 'lucide-react';
 import { api } from '../api/client';
+import { formatSqlDate, formatDate } from '../utils/dateFormat';
 
 export default function MyBooks() {
   const [loans,       setLoans]       = useState([]);
@@ -111,7 +112,7 @@ export default function MyBooks() {
 
                     <div className="card-calendar-due-row" style={{ color: isOverdue ? '#EF4444' : undefined }}>
                       <Calendar size={14} />
-                      <span>Due: {loan.due_date}</span>
+                      <span>Due: {formatSqlDate(loan.due_date)}</span>
                       {isOverdue && <span style={{ fontSize: '11px', fontWeight: 600 }}>({Math.abs(daysLeft)}d overdue)</span>}
                     </div>
 
@@ -169,7 +170,7 @@ export default function MyBooks() {
                           {req.title}
                         </Link>
                         <p className="pending-timestamp-subtext">
-                          Requested on {new Date(req.created_at).toLocaleDateString()}
+                          Requested on {formatDate(req.created_at)}
                         </p>
                       </div>
                     </div>

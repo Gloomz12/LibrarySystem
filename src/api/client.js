@@ -173,6 +173,31 @@ export const api = {
   // Dashboard
   getAdminDashboard:   () => apiFetch('/dashboard/admin'),
   getStudentDashboard: () => apiFetch('/dashboard/student'),
+
+  // Analytics (admin only)
+  getAnalyticsOverview:      () => apiFetch('/analytics/overview'),
+  getBorrowsOverTime:        () => apiFetch('/analytics/borrows-over-time'),
+  getTopBooks:               () => apiFetch('/analytics/top-books'),
+  getGenreDistribution:      () => apiFetch('/analytics/genre-distribution'),
+  getUserActivity:           () => apiFetch('/analytics/user-activity'),
+  getAiMetrics:              () => apiFetch('/analytics/ai-metrics'),
+  clearModelCache:           () => apiFetch('/analytics/clear-model-cache', { method: 'POST' }),
+  debugTrainingData:         () => apiFetch('/analytics/debug-training'),
+
+  // Chatbot
+  chat: (message) =>
+    apiFetch('/chat', { method: 'POST', body: JSON.stringify({ message }) }),
+
+  // Fines
+  getFineConfig:        () => apiFetch('/fines/config'),
+  updateFineConfig:     (data) => apiFetch('/fines/config', { method: 'PUT', body: JSON.stringify(data) }),
+  recalculateFines:     () => apiFetch('/fines/recalculate', { method: 'POST' }),
+  waiveFines:           (userId) => apiFetch(`/fines/waive/${userId}`, { method: 'POST' }),
+
+  // Ratings
+  getBookRatings:  (bookId) => apiFetch(`/ratings/book/${bookId}`),
+  rateBook:        (bookId, rating) => apiFetch('/ratings', { method: 'POST', body: JSON.stringify({ bookId, rating }) }),
+  removeRating:    (bookId) => apiFetch(`/ratings/${bookId}`, { method: 'DELETE' }),
 };
 
 export default api;

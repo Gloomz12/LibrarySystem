@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, User, ChevronRight, Mail, BookOpen, Sparkles } from 'lucide-react';
 import { api } from '../api/client';
+import { formatSqlDate } from '../utils/dateFormat';
 
 export default function Borrowers() {
   const [users,          setUsers]          = useState([]);
@@ -145,7 +146,7 @@ export default function Borrowers() {
                   </div>
                   <div className="meta-numeric-fine-box">
                     <p>Fines</p>
-                    <p>${parseFloat(activeUser.fines || 0).toFixed(2)}</p>
+                    <p>₱{parseFloat(activeUser.fines || 0).toFixed(2)}</p>
                   </div>
                 </div>
               </div>
@@ -185,7 +186,7 @@ export default function Borrowers() {
                                     <p className="borrower-email-string">by {loan.author}</p>
                                   </div>
                                   <span className="risk-pill-indicator risk-low" style={{ fontSize: '9px' }}>
-                                    Due {loan.due_date}
+                                    Due {formatSqlDate(loan.due_date)}
                                   </span>
                                 </div>
                               </Link>

@@ -3,6 +3,82 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Star, BookOpen, User, Calendar, Sparkles, Bookmark, CheckCircle2 } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { formatSqlDate } from '../utils/dateFormat';
+
+// ── Star rating widget ────────────────────────────────────────────────────────
+function StarRating({ bookId, canRate, initialRating, ratingCount, ratingAvg, onRated }) {
+  const [hovered,     setHovered]     = useState(0);
+  const [userRating,  setUserRating]  = useState(initialRating || 0);
+  const [submitting,  setSubmitting]  = useState(false);
+  const [msg,         setMsg]         = useState('');
+
+  const handleRate = async (stars) => {
+    if (!canRate || submitting) return;
+    setSubmitting(true);
+    setMsg('');
+    try {
+      const result = await api.rateBook(bookId, stars);
+      setUserRating(stars);
+      setMsg(`Thanks for rating! New average: ${result.newAverage} ⭐`);
+      if (onRated) onRated(result.newAverage);
+    } catch (err) {
+      setMsg(err.message || 'Could not save rating.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const display = hovered || userRating;
+
+  return (
+    <div style={{ marginTop: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+        {/* Community average */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+          <Star size={14} fill="#FBBF24" color="#FBBF24" />
+          <span style={{ fontSize: '13px', fontWeight: '600', color: '#1A1A1A' }}>
+            {ratingAvg ?? '—'}
+          </span>
+          <span style={{ fontSize: '11px', color: '#A09E9A' }}>
+            ({ratingCount} rating{ratingCount !== 1 ? 's' : ''})
+          </span>
+        </div>
+      </div>
+
+      {canRate && (
+        <div>
+          <p style={{ fontSize: '11px', color: '#8A8884', marginBottom: '4px' }}>
+            {userRating ? 'Your rating:' : 'Rate this book:'}
+          </p>
+          <div style={{ display: 'flex', gap: '3px' }}>
+            {[1, 2, 3, 4, 5].map(star => (
+              <button
+                key={star}
+                type="button"
+                disabled={submitting}
+                onMouseEnter={() => setHovered(star)}
+                onMouseLeave={() => setHovered(0)}
+                onClick={() => handleRate(star)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px' }}
+                aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+              >
+                <Star
+                  size={20}
+                  fill={star <= display ? '#FBBF24' : 'none'}
+                  color={star <= display ? '#FBBF24' : '#D4D0CA'}
+                  style={{ transition: 'all 0.1s ease' }}
+                />
+              </button>
+            ))}
+          </div>
+          {msg && (
+            <p style={{ fontSize: '11px', color: '#15803D', marginTop: '4px' }}>{msg}</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function BookDetails() {
   const navigate = useNavigate();
@@ -11,6 +87,7 @@ export default function BookDetails() {
 
   const [book,        setBook]        = useState(null);
   const [similar,     setSimilar]     = useState([]);
+  const [ratingData,  setRatingData]  = useState(null);
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,12 +97,14 @@ export default function BookDetails() {
     setLoading(true);
     setError('');
     try {
-      const [bookData, similarData] = await Promise.all([
+      const [bookData, similarData, ratingInfo] = await Promise.all([
         api.getBook(bookId),
         api.getSimilarBooks(bookId, 4),
+        api.getBookRatings(bookId),
       ]);
       setBook(bookData);
       setSimilar(similarData);
+      setRatingData(ratingInfo);
     } catch (err) {
       setError('Book not found.');
       console.error(err);
@@ -182,7 +261,7 @@ export default function BookDetails() {
                   </div>
                   <div className="details-author-row" style={{ marginTop: '12px' }}>
                     <Calendar size={14} />
-                    <span>Due: {book.dueDate}</span>
+                    <span>Due: {formatSqlDate(book.dueDate)}</span>
                   </div>
                 </div>
               </div>
@@ -209,6 +288,23 @@ export default function BookDetails() {
                 <div className="metric-stars-container"><Star size={14} fill="#FBBF24" color="#FBBF24" /><span>{book.rating}</span></div>
               </div>
             </div>
+
+            <div className="structural-divider-line" />
+
+            {/* Community rating + student rating widget */}
+            {ratingData && (
+              <div>
+                <p className="profile-inline-flex-heading">Community Rating</p>
+                <StarRating
+                  bookId={book.id}
+                  canRate={user?.role === 'student' && ratingData !== null}
+                  initialRating={ratingData.userRating}
+                  ratingCount={ratingData.count}
+                  ratingAvg={ratingData.average ?? book.rating}
+                  onRated={(newAvg) => setRatingData(prev => ({ ...prev, average: newAvg }))}
+                />
+              </div>
+            )}
 
             <div className="structural-divider-line" />
 

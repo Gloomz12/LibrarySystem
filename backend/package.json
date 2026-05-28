@@ -4,9 +4,12 @@
   "description": "Library System Backend API",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "setup-db": "node db/setup.js"
+    "start":     "node server.js",
+    "dev":       "nodemon server.js",
+    "setup-db":  "node db/setup.js",
+    "load-demo": "node db/load-demo.js",
+    "ai-test":   "node db/run-ai-test.js",
+    "ai-report": "node db/generate-report.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

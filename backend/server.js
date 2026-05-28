@@ -10,6 +10,10 @@ const transactionRoutes     = require('./routes/transactions');
 const userRoutes            = require('./routes/users');
 const recommendationRoutes  = require('./routes/recommendations');
 const dashboardRoutes       = require('./routes/dashboard');
+const analyticsRoutes       = require('./routes/analytics');
+const chatbotRoutes         = require('./routes/chatbot');
+const finesRoutes           = require('./routes/fines');
+const ratingsRoutes         = require('./routes/ratings');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -52,6 +56,10 @@ app.use('/api/transactions',    transactionRoutes);
 app.use('/api/users',           userRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/dashboard',       dashboardRoutes);
+app.use('/api/analytics',       analyticsRoutes);
+app.use('/api/chat',            chatbotRoutes);
+app.use('/api/fines',           finesRoutes);
+app.use('/api/ratings',         ratingsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

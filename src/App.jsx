@@ -4,6 +4,7 @@ import { Sparkles } from 'lucide-react';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
+import ChatWidget from './components/ChatWidget';
 import Login    from './pages/Login';
 import Register from './pages/Register';
 
@@ -15,6 +16,7 @@ import MyBooks           from './pages/MyBooks';
 import StudentTransactions from './pages/StudentTransactions';
 import AdminTransactions   from './pages/AdminTransactions';
 import BookDetails         from './pages/BookDetails';
+import Analytics           from './pages/Analytics';
 
 // ── Protected route wrapper ───────────────────────────────────────────────────
 function ProtectedRoute({ children, requiredRole }) {
@@ -104,9 +106,21 @@ function AppLayout() {
             element={user.role === 'admin' ? <AdminTransactions /> : <StudentTransactions />}
           />
 
+          <Route
+            path="/main/analytics"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <Analytics />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="*" element={<Navigate to="/main/dashboard" replace />} />
         </Routes>
       </div>
+
+      {/* Floating chat widget — available on all authenticated pages */}
+      <ChatWidget />
     </div>
   );
 }

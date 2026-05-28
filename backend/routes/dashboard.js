@@ -2,7 +2,7 @@ const express = require('express');
 const router  = express.Router();
 const pool    = require('../db/connection');
 const { authenticate, authorize } = require('../middleware/auth');
-const { getOverduePredictions } = require('../services/recommendations');
+const { getOverduePredictions } = require('../services/aiEngine');
 
 // ── GET /api/dashboard/admin ──────────────────────────────────────────────────
 router.get('/admin', authenticate, authorize('admin'), async (req, res) => {

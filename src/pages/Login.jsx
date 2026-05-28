@@ -110,17 +110,6 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="login-demo-hint">
-          <p className="login-demo-title">Demo credentials</p>
-          <div className="login-demo-grid">
-            <div className="login-demo-item">
-              <span className="login-demo-role">Admin</span>
-              <span>admin@library.edu</span>
-              <span>Admin@123</span>
-            </div>
-          </div>
-        </div>
-
         <p className="register-signin-link">
           New student?{' '}
           <Link to="/register" className="register-link-accent">Create an account</Link>

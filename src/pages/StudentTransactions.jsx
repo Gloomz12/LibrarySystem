@@ -5,6 +5,7 @@ import {
   Search, ChevronDown, ArrowUpDown, User, Calendar,
 } from 'lucide-react';
 import { api } from '../api/client';
+import { formatDate, formatSqlDate } from '../utils/dateFormat';
 
 export default function StudentTransactions() {
   const [transactions, setTransactions] = useState([]);
@@ -201,13 +202,13 @@ export default function StudentTransactions() {
                     <div className="tx-meta-row-data">
                       <div className="tx-data-capsule">
                         <Calendar size={12} />
-                        <span>{new Date(tx.created_at).toLocaleDateString()}</span>
+                        <span>{formatDate(tx.created_at)}</span>
                       </div>
                       <span className={`status-tag-badge ${tx.type === 'borrow' ? 'status-badge-borrowed' : 'status-badge-returned'}`}>
                         {tx.type === 'borrow' ? 'Borrowed' : 'Returned'}
                       </span>
                       {tx.type === 'borrow' && tx.due_date && (
-                        <span className="row-assignment-string">Due: {tx.due_date}</span>
+                        <span className="row-assignment-string">Due: {formatSqlDate(tx.due_date)}</span>
                       )}
                     </div>
                   </div>

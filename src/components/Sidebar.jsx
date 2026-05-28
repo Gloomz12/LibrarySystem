@@ -6,6 +6,7 @@ import {
   Search,
   Users,
   Repeat,
+  BarChart2,
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -18,10 +19,9 @@ export default function Sidebar({ role }) {
   const isActive = (path) => {
     if (path === '/main/catalog') {
       return location.pathname.startsWith('/main/catalog') || location.pathname.startsWith('/book')
-        ? 'active-route'
-        : '';
+        ? 'active-route' : '';
     }
-    return location.pathname === path ? 'active-route' : '';
+    return location.pathname.startsWith(path) ? 'active-route' : '';
   };
 
   const handleLogout = async () => {
@@ -70,6 +70,13 @@ export default function Sidebar({ role }) {
           <Repeat size={18} />
           <span>Transactions</span>
         </Link>
+
+        {role === 'admin' && (
+          <Link className={`nav-link ${isActive('/main/analytics')}`} to="/main/analytics">
+            <BarChart2 size={18} />
+            <span>Analytics</span>
+          </Link>
+        )}
       </nav>
 
       <div className="sidebar-footer">

@@ -2,10 +2,95 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRightLeft, BookOpen, RotateCcw,
-  Search, ClipboardList,
+  Search, ClipboardList, Settings,
   User, Calendar, CircleCheckBig, CircleX,
 } from 'lucide-react';
 import { api } from '../api/client';
+import { formatDate, formatSqlDate } from '../utils/dateFormat';
+
+// ── Fine Config Panel ─────────────────────────────────────────────────────────
+function FineConfigPanel() {
+  const [config,   setConfig]   = useState(null);
+  const [editing,  setEditing]  = useState(false);
+  const [form,     setForm]     = useState({});
+  const [saving,   setSaving]   = useState(false);
+  const [msg,      setMsg]      = useState('');
+
+  useEffect(() => {
+    api.getFineConfig().then(c => { setConfig(c); setForm({ ratePerDay: c.rate_per_day, gracePeriod: c.grace_period, maxFine: c.max_fine, currencySymbol: c.currency_symbol }); }).catch(() => {});
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true); setMsg('');
+    try {
+      const updated = await api.updateFineConfig(form);
+      setConfig(updated);
+      setEditing(false);
+      setMsg('Fine settings saved.');
+    } catch (err) { setMsg(err.message || 'Failed to save.'); }
+    finally { setSaving(false); }
+  };
+
+  const handleRecalculate = async () => {
+    setSaving(true); setMsg('');
+    try {
+      const r = await api.recalculateFines();
+      setMsg(r.message);
+    } catch (err) { setMsg(err.message || 'Failed.'); }
+    finally { setSaving(false); }
+  };
+
+  if (!config) return null;
+
+  return (
+    <div className="content-panel-block" style={{ marginTop: '24px' }}>
+      <div className="panel-header-block" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Settings size={16} color="#D4A373" />
+          <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '600' }}>Fine Settings</h3>
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className="btn-card-secondary" style={{ fontSize: '12px', height: '30px' }} onClick={handleRecalculate} disabled={saving}>
+            Recalculate Active Fines
+          </button>
+          <button className="btn-card-secondary" style={{ fontSize: '12px', height: '30px' }} onClick={() => setEditing(v => !v)}>
+            {editing ? 'Cancel' : 'Edit'}
+          </button>
+        </div>
+      </div>
+      <div className="panel-body-content" style={{ padding: '16px 24px' }}>
+        {msg && <div className={`action-feedback-banner ${msg.includes('Failed') ? 'banner-error' : 'banner-success'}`} style={{ marginBottom: '12px' }}>{msg}</div>}
+        {editing ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+            {[
+              { label: 'Rate per day', key: 'ratePerDay', type: 'number', step: '0.50', min: '0' },
+              { label: 'Grace period (days)', key: 'gracePeriod', type: 'number', step: '1', min: '0' },
+              { label: 'Max fine', key: 'maxFine', type: 'number', step: '10', min: '0' },
+              { label: 'Currency symbol', key: 'currencySymbol', type: 'text' },
+            ].map(({ label, key, type, step, min }) => (
+              <div key={key}>
+                <label style={{ fontSize: '11px', fontWeight: '600', color: '#716F6A', display: 'block', marginBottom: '4px' }}>{label}</label>
+                <input type={type} step={step} min={min} value={form[key] ?? ''} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
+                  style={{ width: '100%', height: '34px', padding: '0 10px', border: '1px solid #EAE6DF', borderRadius: '6px', fontSize: '13px' }} />
+              </div>
+            ))}
+            <div style={{ gridColumn: '1/-1' }}>
+              <button className="btn-card-primary" style={{ height: '34px', fontSize: '13px' }} onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving…' : 'Save Settings'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', fontSize: '13px' }}>
+            <span><strong>{config.currency_symbol}{parseFloat(config.rate_per_day).toFixed(2)}</strong> per day overdue</span>
+            <span><strong>{config.grace_period}</strong> day{config.grace_period !== 1 ? 's' : ''} grace period</span>
+            <span>Max fine: <strong>{config.currency_symbol}{parseFloat(config.max_fine).toFixed(2)}</strong></span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminTransactions() {
   const [transactions, setTransactions] = useState([]);
@@ -214,8 +299,7 @@ export default function AdminTransactions() {
         <div className="content-panel-block">
           <div className="panel-header-block">
             <h3>Transaction History</h3>
-          </div>
-          <div className="panel-body-content">
+          </div>          <div className="panel-body-content">
             <div className="tx-ledger-list">
               {loading ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', color: '#A09E9A', fontSize: '14px' }}>Loading…</div>
@@ -242,13 +326,13 @@ export default function AdminTransactions() {
 
                     <div className="tx-meta-row-data">
                       <div className="tx-data-capsule" style={{ color: '#716F6A' }}>
-                        <span>{new Date(tx.created_at).toLocaleDateString()}</span>
+                        <span>{formatDate(tx.created_at)}</span>
                       </div>
                       <span className={`status-tag-badge ${tx.type === 'borrow' ? 'status-badge-borrowed' : 'status-badge-returned'}`}>
                         {tx.type === 'borrow' ? 'Borrowed' : 'Returned'}
                       </span>
                       {tx.due_date && (
-                        <span className="row-assignment-string">Due: {tx.due_date}</span>
+                        <span className="row-assignment-string">Due: {formatSqlDate(tx.due_date)}</span>
                       )}
                     </div>
                   </div>
@@ -261,6 +345,9 @@ export default function AdminTransactions() {
             </div>
           </div>
         </div>
+
+        {/* Fine Configuration */}
+        <FineConfigPanel />
 
       </div>
     </main>

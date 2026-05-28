@@ -2,15 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BookOpen, Users, Repeat, TriangleAlert,
-  TrendingUp, Clock, Sparkles,
+  TrendingUp, Clock, Sparkles, CalendarClock,
 } from 'lucide-react';
 import { api } from '../api/client';
+import { formatSqlDate, getLiveClock } from '../utils/dateFormat';
 
 export default function AdminDashboard() {
   const [data,    setData]    = useState(null);
   const [recs,    setRecs]    = useState([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
+  const [clock,   setClock]   = useState(getLiveClock());
+
+  useEffect(() => {
+    const t = setInterval(() => setClock(getLiveClock()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -60,6 +67,10 @@ export default function AdminDashboard() {
         <div className="view-heading-group">
           <h1>Dashboard</h1>
           <p>Overview of your library system and intelligent insights</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '12px', color: '#8A8884' }}>
+            <CalendarClock size={13} />
+            <span>{clock}</span>
+          </div>
         </div>
 
         {/* KPI Cards */}
@@ -136,7 +147,7 @@ export default function AdminDashboard() {
                           </span>
                         </div>
                         <p className="row-assignment-string">
-                          Borrowed by {item.borrower_name} · Due {item.due_date}
+                          Borrowed by {item.borrower_name} · Due {formatSqlDate(item.due_date)}
                           {item.isOverdue && <span style={{ color: '#EF4444', marginLeft: '6px' }}>OVERDUE</span>}
                         </p>
                       </div>

@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const pool     = require('../db/connection');
 const validate = require('../middleware/validate');
 const { authenticate, authorize } = require('../middleware/auth');
+const { applyFineOnReturn } = require('../services/fines');
 
 // ── GET /api/transactions ─────────────────────────────────────────────────────
 // Admin: all transactions. Student: own transactions only.
@@ -314,12 +315,36 @@ router.post(
 
       } else if (tx.type === 'return_request') {
         // Mark the original borrow as returned
-        await conn.execute(
+        const [updateResult] = await conn.execute(
           `UPDATE transactions
            SET status = 'completed', returned_at = NOW(), type = 'return'
            WHERE book_id = ? AND user_id = ? AND type = 'borrow' AND status = 'approved' AND returned_at IS NULL`,
           [tx.book_id, tx.user_id]
         );
+
+        if (updateResult.affectedRows === 0) {
+          await conn.rollback();
+          return res.status(409).json({ error: 'No active borrow found for this return request' });
+        }
+
+        // Get the original borrow transaction to calculate fines
+        const [borrowRows] = await conn.execute(
+          `SELECT id, due_date, returned_at FROM transactions
+           WHERE book_id = ? AND user_id = ? AND type = 'return' AND status = 'completed'
+           ORDER BY returned_at DESC LIMIT 1`,
+          [tx.book_id, tx.user_id]
+        );
+
+        // Apply fine if returned late
+        if (borrowRows.length > 0 && borrowRows[0].due_date) {
+          await applyFineOnReturn(
+            conn,
+            borrowRows[0].id,
+            tx.user_id,
+            borrowRows[0].due_date,
+            borrowRows[0].returned_at
+          );
+        }
 
         // Mark this return_request as completed
         await conn.execute(

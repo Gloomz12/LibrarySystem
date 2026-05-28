@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BookOpen, Bookmark, Clock, TriangleAlert,
-  Library, ArrowRight, Bell, Sparkles,
+  Library, ArrowRight, Bell, Sparkles, CalendarClock,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { formatSqlDate, getLiveClock } from '../utils/dateFormat';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -13,6 +14,13 @@ export default function StudentDashboard() {
   const [recs,      setRecs]      = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState('');
+  const [clock,     setClock]     = useState(getLiveClock());
+
+  // Live clock
+  useEffect(() => {
+    const t = setInterval(() => setClock(getLiveClock()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -59,7 +67,7 @@ export default function StudentDashboard() {
     { id: 'borrowed', label: 'Borrowed',         value: stats.borrowed,        subtext: stats.borrowed > 0 ? 'Active loans' : 'No active loans', status: 'success', icon: BookOpen },
     { id: 'pending',  label: 'Pending Requests',  value: stats.pendingRequests, subtext: `${stats.pendingRequests} request(s)`,                   status: 'neutral', icon: Bookmark },
     { id: 'due',      label: 'Due Soon',           value: stats.dueSoon,         subtext: 'Within 3 days',                                         status: stats.dueSoon > 0 ? 'warning' : 'success', icon: Clock },
-    { id: 'fines',    label: 'Fines',              value: `$${stats.fines}`,     subtext: parseFloat(stats.fines) > 0 ? 'Outstanding' : 'No fines', status: parseFloat(stats.fines) > 0 ? 'warning' : 'success', icon: TriangleAlert },
+    { id: 'fines',    label: 'Fines',              value: `${stats.fines}`,     subtext: parseFloat(stats.fines) > 0 ? 'Outstanding' : 'No fines', status: parseFloat(stats.fines) > 0 ? 'warning' : 'success', icon: TriangleAlert },
   ];
 
   return (
@@ -69,6 +77,10 @@ export default function StudentDashboard() {
         <div className="view-heading-group" style={{ marginBottom: '24px' }}>
           <h1>Hello, {user?.name?.split(' ')[0] || 'Student'}</h1>
           <p>Here's what's happening with your library account</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '12px', color: '#8A8884' }}>
+            <CalendarClock size={13} />
+            <span>{clock}</span>
+          </div>
         </div>
 
         <div className="dashboard-stats-deck">
@@ -135,7 +147,7 @@ export default function StudentDashboard() {
                             {timeLeft}
                           </span>
                           <span className="loan-absolute-due-date">
-                            Due {loan.due_date}
+                            Due {formatSqlDate(loan.due_date)}
                           </span>
                         </div>
                       </Link>
@@ -200,7 +212,7 @@ export default function StudentDashboard() {
             ) : (
               <div className="dashboard-recommendations-grid">
                 {recs.map((rec) => (
-                  <Link key={rec.id} to={`/main/catalog/${rec.id}`} className="recommendation-interactive-card group">
+                  <Link key={rec.id} to={`/main/catalog/${rec.id}`} className="recommendation-interactive-card">
                     <div className="recommendation-cover-thumbnail" style={{ backgroundColor: rec.bg_banner }}>
                       {rec.code}
                     </div>
